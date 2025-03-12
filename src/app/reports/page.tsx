@@ -52,113 +52,144 @@ export default function ReportsPage() {
   // Fetch audits from all supported chains
   const fetchAllChainAudits = async () => {
     setIsLoading(true);
-    try {
-      const allAudits: AuditReport[] = [];
+    setError(null);
+    const allAudits: AuditReport[] = [];
 
-      for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
-        if (!CONTRACT_ADDRESSES[chainKey as ChainKey]) {
-          console.log(`No contract address found for ${chainKey}, skipping`);
-          continue;
-        }
+    for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
+      console.log(`Attempting to fetch from ${chainKey}...`);
+      
+      // Get contract address for this chain
+      const contractAddress = CONTRACT_ADDRESSES[chainKey as ChainKey];
+      if (!contractAddress) {
+        console.log(`No contract address found for ${chainKey}, skipping...`);
+        continue;
+      }
 
-        try {
-          console.log(`Fetching from ${chainKey}...`);
-          
-          const provider = new ethers.JsonRpcProvider(chainData.rpcUrls[0]);
-  
-          const contract = new ethers.Contract(
-            CONTRACT_ADDRESSES[chainKey as ChainKey],
-            AUDIT_REGISTRY_ABI,
-            provider
-          );
+      let success = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      const baseDelay = 2000; // 2 seconds base delay
 
-          // Get total number of contracts first
+      while (!success && retryCount < maxRetries) {
+        // Try each RPC URL in sequence
+        for (const rpcUrl of chainData.rpcUrls) {
           try {
-            const totalContracts = await contract.getTotalContracts();
+            console.log(`Attempting RPC ${rpcUrl} (attempt ${retryCount + 1}/${maxRetries})...`);
+            
+            // Create provider with more aggressive timeouts
+            const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, {
+              staticNetwork: true,
+              polling: true,
+              pollingInterval: 1000,
+              batchMaxCount: 1
+            });
+
+            // Create contract instance
+            const contract = new ethers.Contract(
+              contractAddress,
+              AUDIT_REGISTRY_ABI,
+              provider
+            );
+
+            // Get total contracts with timeout
+            const totalContractsPromise = contract.getTotalContracts();
+            const totalContracts = await Promise.race([
+              totalContractsPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('getTotalContracts timeout')), 10000)
+              )
+            ]);
+
             const totalContractsNum = Number(totalContracts);
             console.log(`Total contracts on ${chainKey}: ${totalContractsNum}`);
-            
+
             if (totalContractsNum === 0) {
               console.log(`No contracts found on ${chainKey}`);
-              continue;
+              success = true;
+              break;
             }
 
-            // Fetch all audits at once with proper error handling
-            try {
-              // Limit batch size to prevent potential issues
-              const batchSize = Math.min(totalContractsNum, 100);
-              console.log(`Fetching ${batchSize} audits from ${chainKey}`);
-              
-              const result = await contract.getAllAudits(0, batchSize);
-              
-              if (!result || !result.contractHashes) {
-                console.log(`No valid audit data returned from ${chainKey}`);
-                continue;
-              }
+            // Fetch all audits with timeout
+            const getAllAuditsPromise = contract.getAllAudits(0, totalContractsNum);
+            const result = await Promise.race([
+              getAllAuditsPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('getAllAudits timeout')), 20000)
+              )
+            ]);
 
-              const {
-                contractHashes,
-                stars,
-                summaries,
-                auditors,
-                timestamps
-              } = result;
+            if (!result || !Array.isArray(result.contractHashes)) {
+              throw new Error('Invalid response format');
+            }
 
-              // Ensure we have valid arrays before processing
-              if (!Array.isArray(contractHashes) || !Array.isArray(stars) || 
-                  !Array.isArray(summaries) || !Array.isArray(auditors) || 
-                  !Array.isArray(timestamps)) {
-                console.error(`Invalid data structure returned from ${chainKey}`);
-                continue;
-              }
+            const {
+              contractHashes,
+              stars,
+              summaries,
+              auditors,
+              timestamps
+            } = result;
 
-              // Process all audits with proper error handling
-              for (let i = 0; i < contractHashes.length; i++) {
-                try {
+            // Process results in smaller batches to prevent UI freezing
+            const batchSize = 50;
+            for (let i = 0; i < contractHashes.length; i += batchSize) {
+              const batch = contractHashes.slice(i, i + batchSize);
+              batch.forEach((hash: string, idx: number) => {
+                const actualIdx = i + idx;
+                if (actualIdx < stars.length && actualIdx < summaries.length && 
+                    actualIdx < auditors.length && actualIdx < timestamps.length) {
                   allAudits.push({
-                    contractHash: contractHashes[i],
-                    stars: Number(stars[i]),
-                    summary: summaries[i] || '',
-                    auditor: auditors[i],
-                    timestamp: Number(timestamps[i]),
+                    contractHash: hash,
+                    stars: Number(stars[actualIdx]),
+                    summary: summaries[actualIdx] || '',
+                    auditor: auditors[actualIdx],
+                    timestamp: Number(timestamps[actualIdx]),
                     chain: chainKey as ChainKey
                   });
-                } catch (parseError) {
-                  console.error(`Error parsing audit data at index ${i}:`, parseError);
-                  continue;
                 }
-              }
-
-              console.log(`Processed ${contractHashes.length} audits from ${chainKey}`);
-
-            } catch (fetchError) {
-              console.error(`Error fetching audits from ${chainKey}:`, fetchError);
-              continue;
+              });
+              // Small delay between batches to prevent UI freeze
+              await new Promise(resolve => setTimeout(resolve, 10));
             }
 
-          } catch (error) {
-            console.error(`Error getting total contracts from ${chainKey}:`, error);
-            continue;
-          }
+            console.log(`Successfully processed ${contractHashes.length} audits from ${chainKey}`);
+            success = true;
+            break; // Break the RPC URL loop if successful
 
-        } catch (chainError) {
-          console.error(`Error setting up chain ${chainKey}:`, chainError);
-          continue;
+          } catch (error: any) {
+            // Check for specific RPC errors
+            if (error?.code === 'SERVER_ERROR' || 
+                (error?.message && (
+                  error.message.includes('503') || 
+                  error.message.includes('timeout') ||
+                  error.message.includes('network error')
+                ))) {
+              console.warn(`RPC ${rpcUrl} failed (${error.message}), trying next...`);
+              continue;
+            }
+            console.error(`Error on ${chainKey}:`, error);
+          }
+        }
+
+        if (!success) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
+            console.log(`All RPCs failed for ${chainKey}, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
         }
       }
-  
-      console.log(`Total audits collected: ${allAudits.length}`);
-      if (allAudits.length === 0) {
-        console.log('No audits found on any chain');
-      } else {
-        setReports(allAudits.sort((a, b) => b.timestamp - a.timestamp));
+
+      if (!success) {
+        console.error(`Failed to fetch from ${chainKey} after ${maxRetries} attempts`);
       }
-  
-    } catch (error) {
-      console.error('Failed to fetch audits:', error);
-    } finally {
-      setIsLoading(false);
     }
+
+    // Sort all audits by timestamp (most recent first)
+    allAudits.sort((a, b) => b.timestamp - a.timestamp);
+    setReports(allAudits);
+    setIsLoading(false);
   };
 
   useEffect(() => {
