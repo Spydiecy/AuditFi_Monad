@@ -18,10 +18,10 @@ import {
 import Image from 'next/image';
 import { CHAIN_CONFIG } from '@/utils/web3';
 import { CONTRACT_ADDRESSES, AUDIT_REGISTRY_ABI, ChainKey } from '@/utils/contracts';
+import { useWallet } from '@/contexts/WalletConext';
 
 interface AuditReport {
   contractHash: string;
-  transactionHash: string;
   stars: number;
   summary: string;
   auditor: string;
@@ -37,6 +37,7 @@ interface FilterState {
 }
 
 export default function ReportsPage() {
+  const { walletConnected, walletAddress } = useWallet();
   const [reports, setReports] = useState<AuditReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<AuditReport | null>(null);
@@ -55,6 +56,11 @@ export default function ReportsPage() {
       const allAudits: AuditReport[] = [];
 
       for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
+        if (!CONTRACT_ADDRESSES[chainKey as ChainKey]) {
+          console.log(`No contract address found for ${chainKey}, skipping`);
+          continue;
+        }
+
         try {
           console.log(`Fetching from ${chainKey}...`);
           
@@ -79,7 +85,11 @@ export default function ReportsPage() {
 
             // Fetch all audits at once with proper error handling
             try {
-              const result = await contract.getAllAudits(0, totalContractsNum);
+              // Limit batch size to prevent potential issues
+              const batchSize = Math.min(totalContractsNum, 100);
+              console.log(`Fetching ${batchSize} audits from ${chainKey}`);
+              
+              const result = await contract.getAllAudits(0, batchSize);
               
               if (!result || !result.contractHashes) {
                 console.log(`No valid audit data returned from ${chainKey}`);
@@ -107,7 +117,6 @@ export default function ReportsPage() {
                 try {
                   allAudits.push({
                     contractHash: contractHashes[i],
-                    transactionHash: '', // Skip tx hash lookup for now
                     stars: Number(stars[i]),
                     summary: summaries[i] || '',
                     auditor: auditors[i],
@@ -437,23 +446,23 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <div>
-                    <label className="block text-sm text-gray-400 mb-1">Transaction Hash</label>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Contract Hash</label>
                     <div className="font-mono bg-gray-800/70 px-3 py-2 rounded-lg border border-gray-700/70 flex items-center justify-between">
                       <span className="truncate">
-                      {selectedReport.transactionHash.slice(0, 28)}...{selectedReport.transactionHash.slice(-24)}
+                        {selectedReport.contractHash}
                       </span>
-                        <button
+                      <button
                         onClick={() => {
-                          navigator.clipboard.writeText(selectedReport.transactionHash);
+                          navigator.clipboard.writeText(selectedReport.contractHash);
                         }}
                         className="ml-2 p-1.5 hover:bg-primary-500/20 rounded-md transition-colors duration-200"
-                        title="Copy txn hash"
-                        >
+                        title="Copy contract hash"
+                      >
                         <Copy size={18} weight="bold" className="text-primary-400" />
                       </button>
                     </div>
-                    </div>
+                  </div>
 
                   <div>
                     <label className="block text-sm text-gray-400 mb-1">Chain</label>
@@ -524,12 +533,12 @@ export default function ReportsPage() {
                       Export Report
                     </button>
                     <a
-                      href={`${CHAIN_CONFIG[selectedReport.chain].blockExplorerUrls[0]}/tx/${selectedReport.transactionHash}`}
+                      href={`${CHAIN_CONFIG[selectedReport.chain].blockExplorerUrls[0]}/address/${selectedReport.contractHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2"
                     >
-                      View on Explorer
+                      View Contract on Explorer
                       <ArrowSquareOut size={20} weight="bold" />
                     </a>
                   </div>
@@ -539,6 +548,6 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
-      </div>
-    );
-  }
+    </div>
+  );
+}
