@@ -40,6 +40,7 @@ export default function ReportsPage() {
   const { walletConnected, walletAddress } = useWallet();
   const [reports, setReports] = useState<AuditReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<AuditReport | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({

@@ -41,6 +41,7 @@ export default function ProfilePage() {
     recentAudits: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch user stats when wallet is connected
   useEffect(() => {
@@ -53,141 +54,158 @@ export default function ProfilePage() {
 
   const fetchUserStats = async (userAddress: string) => {
     setIsLoading(true);
-    try {
-      const allAudits: UserAudit[] = [];
-      const chainCounts: Record<string, number> = {};
-      let totalStars = 0;
-  
-      for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
-        try {
-          console.log(`Fetching from ${chainKey}...`);
-          
-          // Create a provider for the current chain
-          const provider = new ethers.JsonRpcProvider(chainData.rpcUrls[0]);
-          
-          // Get contract address for this chain
-          const contractAddress = CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES];
-          
-          // Skip if contract address is not defined for this chain
-          if (!contractAddress) {
-            console.log(`No contract address found for ${chainKey}`);
-            continue;
-          }
-  
-          const contract = new ethers.Contract(
-            contractAddress,
-            AUDIT_REGISTRY_ABI,
-            provider
-          );
-  
-          // Get total number of contracts first
+    setError(null);
+    const allAudits: UserAudit[] = [];
+    const chainCounts: Record<string, number> = {};
+    let totalStars = 0;
+
+    for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
+      console.log(`Attempting to fetch from ${chainKey}...`);
+      
+      // Get contract address for this chain
+      const contractAddress = CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES];
+      if (!contractAddress) {
+        console.log(`No contract address found for ${chainKey}, skipping...`);
+        continue;
+      }
+
+      let success = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      const baseDelay = 2000; // 2 seconds base delay
+
+      while (!success && retryCount < maxRetries) {
+        // Try each RPC URL in sequence
+        for (const rpcUrl of chainData.rpcUrls) {
           try {
-            const totalContracts = await contract.getTotalContracts();
+            console.log(`Attempting RPC ${rpcUrl} (attempt ${retryCount + 1}/${maxRetries})...`);
+            
+            // Create provider with more aggressive timeouts
+            const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, {
+              staticNetwork: true,
+              polling: true,
+              pollingInterval: 1000,
+              batchMaxCount: 1
+            });
+
+            // Create contract instance
+            const contract = new ethers.Contract(
+              contractAddress,
+              AUDIT_REGISTRY_ABI,
+              provider
+            );
+
+            // Get total contracts with timeout
+            const totalContractsPromise = contract.getTotalContracts();
+            const totalContracts = await Promise.race([
+              totalContractsPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('getTotalContracts timeout')), 10000)
+              )
+            ]);
+
             const totalContractsNum = Number(totalContracts);
             console.log(`Total contracts on ${chainKey}: ${totalContractsNum}`);
-            
+
             if (totalContractsNum === 0) {
               console.log(`No contracts found on ${chainKey}`);
-              continue;
+              success = true;
+              break;
             }
 
-            // Fetch all audits at once with proper error handling
-            try {
-              // If there are a lot of contracts, we might need to batch this
-              // For now, we'll limit to 100 contracts for safety
-              const batchSize = Math.min(totalContractsNum, 100);
-              
-              const result = await contract.getAllAudits(0, batchSize);
-              
-              if (!result || !result.contractHashes) {
-                console.log(`No valid audit data returned from ${chainKey}`);
-                continue;
-              }
+            // Fetch all audits with timeout
+            const getAllAuditsPromise = contract.getAllAudits(0, totalContractsNum);
+            const result = await Promise.race([
+              getAllAuditsPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('getAllAudits timeout')), 20000)
+              )
+            ]);
 
-              const {
-                contractHashes,
-                stars,
-                summaries,
-                auditors,
-                timestamps
-              } = result;
+            if (!result || !Array.isArray(result.contractHashes)) {
+              throw new Error('Invalid response format');
+            }
 
-              // Ensure we have valid arrays before processing
-              if (!Array.isArray(contractHashes) || !Array.isArray(stars) || 
-                  !Array.isArray(summaries) || !Array.isArray(auditors) || 
-                  !Array.isArray(timestamps)) {
-                console.error(`Invalid data structure returned from ${chainKey}`);
-                continue;
-              }
+            const {
+              contractHashes,
+              stars,
+              summaries,
+              auditors,
+              timestamps
+            } = result;
 
-              // Add debug logging
-              console.log(`Got ${contractHashes.length} audits from ${chainKey}`);
-              console.log(`User address: ${userAddress}`);
-              
-              // If there are audits, log the first one for debugging
-              if (contractHashes.length > 0) {
-                console.log(`Sample auditor address: ${auditors[0]}`);
-                console.log(`Address comparison: ${auditors[0].toLowerCase() === userAddress.toLowerCase()}`);
-              }
+            // Process results in smaller batches to prevent UI freezing
+            const batchSize = 50;
+            for (let i = 0; i < contractHashes.length; i += batchSize) {
+              const batch = contractHashes.slice(i, i + batchSize);
+              batch.forEach((hash: string, idx: number) => {
+                const actualIdx = i + idx;
+                if (actualIdx < stars.length && actualIdx < summaries.length && 
+                    actualIdx < auditors.length && actualIdx < timestamps.length &&
+                    auditors[actualIdx].toLowerCase() === userAddress.toLowerCase()) {
+                  allAudits.push({
+                    contractHash: hash,
+                    stars: Number(stars[actualIdx]),
+                    summary: summaries[actualIdx] || '',
+                    timestamp: Number(timestamps[actualIdx]),
+                    chain: chainKey as keyof typeof CHAIN_CONFIG
+                  });
 
-              // Filter audits for the current user
-              let userAuditsCounter = 0;
-              for (let i = 0; i < contractHashes.length; i++) {
-                if (auditors[i] && auditors[i].toLowerCase() === userAddress.toLowerCase()) {
-                  userAuditsCounter++;
-                  try {
-                    allAudits.push({
-                      contractHash: contractHashes[i],
-                      stars: Number(stars[i]),
-                      summary: summaries[i] || '',
-                      timestamp: Number(timestamps[i]),
-                      chain: chainKey as keyof typeof CHAIN_CONFIG
-                    });
-
-                    // Update chain counts and total stars
-                    chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
-                    totalStars += Number(stars[i]);
-                  } catch (parseError) {
-                    console.error(`Error parsing audit data at index ${i}:`, parseError);
-                    continue;
-                  }
+                  // Update chain counts and total stars
+                  chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
+                  totalStars += Number(stars[actualIdx]);
                 }
-              }
-
-              console.log(`Found ${userAuditsCounter} audits for user on ${chainKey}`);
-
-            } catch (fetchError) {
-              console.error(`Error fetching audits from ${chainKey}:`, fetchError);
-              continue;
+              });
+              // Small delay between batches to prevent UI freeze
+              await new Promise(resolve => setTimeout(resolve, 10));
             }
 
-          } catch (error) {
-            console.error(`Error getting total contracts from ${chainKey}:`, error);
-            continue;
+            console.log(`Successfully processed ${contractHashes.length} audits from ${chainKey}`);
+            success = true;
+            break; // Break the RPC URL loop if successful
+
+          } catch (error: any) {
+            // Check for specific RPC errors
+            if (error?.code === 'SERVER_ERROR' || 
+                (error?.message && (
+                  error.message.includes('503') || 
+                  error.message.includes('timeout') ||
+                  error.message.includes('network error')
+                ))) {
+              console.warn(`RPC ${rpcUrl} failed (${error.message}), trying next...`);
+              continue;
+            }
+            console.error(`Error on ${chainKey}:`, error);
           }
-        } catch (chainError) {
-          console.error(`Error setting up chain ${chainKey}:`, chainError);
-          chainCounts[chainKey] = 0;
+        }
+
+        if (!success) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
+            console.log(`All RPCs failed for ${chainKey}, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
         }
       }
-  
-      const totalAudits = allAudits.length;
-      console.log(`Total audits found for user: ${totalAudits}`);
-      
-      setStats({
-        totalAudits,
-        averageStars: totalAudits > 0 ? totalStars / totalAudits : 0,
-        chainBreakdown: chainCounts,
-        recentAudits: allAudits
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .slice(0, 5)
-      });
-  
-    } catch (error) {
-      console.error('Failed to fetch user stats:', error);
-    } finally {
-      setIsLoading(false);
+
+      if (!success) {
+        console.error(`Failed to fetch from ${chainKey} after ${maxRetries} attempts`);
+      }
     }
+
+    const totalAudits = allAudits.length;
+    console.log(`Total audits found for user: ${totalAudits}`);
+    
+    setStats({
+      totalAudits,
+      averageStars: totalAudits > 0 ? totalStars / totalAudits : 0,
+      chainBreakdown: chainCounts,
+      recentAudits: allAudits
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 5)
+    });
+    setIsLoading(false);
   };
 
   if (!walletConnected || !walletAddress) {
