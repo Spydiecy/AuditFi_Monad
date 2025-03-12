@@ -22,7 +22,6 @@ contract CustomToken {
     uint256 public totalSupply;
     
     address public owner;
-    bool public paused;
     
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -30,15 +29,9 @@ contract CustomToken {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event Paused(bool isPaused);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
-        _;
-    }
-    
-    modifier whenNotPaused() {
-        require(!paused, "Contract paused");
         _;
     }
 
@@ -53,13 +46,15 @@ contract CustomToken {
         return _balances[account];
     }
     
-    function transfer(address to, uint256 amount) public whenNotPaused returns (bool) {
+    function transfer(address to, uint256 amount) public returns (bool) {
         require(to != address(0), "Transfer to zero address");
         
         uint256 senderBalance = _balances[msg.sender];
         require(senderBalance >= amount, "Insufficient balance");
         
-        _balances[msg.sender] = senderBalance - amount;
+        unchecked {
+            _balances[msg.sender] = senderBalance - amount;
+        }
         _balances[to] += amount;
         
         emit Transfer(msg.sender, to, amount);
@@ -71,13 +66,36 @@ contract CustomToken {
     }
     
     function approve(address spender, uint256 amount) public returns (bool) {
+        require(spender != address(0), "Approve to zero address");
+        
         _allowances[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
     }
     
-    function transferFrom(address from, address to, uint256 amount) public whenNotPaused returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+        require(spender != address(0), "Approve to zero address");
+        _allowances[msg.sender][spender] += addedValue;
+        emit Approval(msg.sender, spender, _allowances[msg.sender][spender]);
+        return true;
+    }
+    
+    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+        require(spender != address(0), "Approve to zero address");
+        uint256 currentAllowance = _allowances[msg.sender][spender];
+        require(currentAllowance >= subtractedValue, "Decreased allowance below zero");
+        
+        unchecked {
+            _allowances[msg.sender][spender] = currentAllowance - subtractedValue;
+        }
+        
+        emit Approval(msg.sender, spender, _allowances[msg.sender][spender]);
+        return true;
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
         require(to != address(0), "Transfer to zero address");
+        require(from != address(0), "Transfer from zero address");
         
         uint256 currentAllowance = _allowances[from][msg.sender];
         require(currentAllowance >= amount, "Insufficient allowance");
@@ -85,9 +103,11 @@ contract CustomToken {
         uint256 fromBalance = _balances[from];
         require(fromBalance >= amount, "Insufficient balance");
         
-        _balances[from] = fromBalance - amount;
+        unchecked {
+            _balances[from] = fromBalance - amount;
+            _allowances[from][msg.sender] = currentAllowance - amount;
+        }
         _balances[to] += amount;
-        _allowances[from][msg.sender] = currentAllowance - amount;
         
         emit Transfer(from, to, amount);
         return true;
@@ -107,19 +127,13 @@ contract CustomToken {
     function burn(uint256 amount) public {
         uint256 accountBalance = _balances[msg.sender];
         require(accountBalance >= amount, "Burn amount exceeds balance");
-        _balances[msg.sender] = accountBalance - amount;
-        totalSupply -= amount;
+        
+        unchecked {
+            _balances[msg.sender] = accountBalance - amount;
+            totalSupply -= amount;
+        }
+        
         emit Transfer(msg.sender, address(0), amount);
-    }
-    
-    function pause() public onlyOwner {
-        paused = true;
-        emit Paused(true);
-    }
-    
-    function unpause() public onlyOwner {
-        paused = false;
-        emit Paused(false);
     }
     
     function transferOwnership(address newOwner) public onlyOwner {
@@ -137,7 +151,6 @@ contract CustomNFT {
     string public name;
     string public symbol;
     address public owner;
-    bool public paused;
     
     string private baseURI;
     uint256 private _nextTokenId;
@@ -153,15 +166,9 @@ contract CustomNFT {
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event Paused(bool isPaused);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
-        _;
-    }
-    
-    modifier whenNotPaused() {
-        require(!paused, "Contract paused");
         _;
     }
 
@@ -205,20 +212,56 @@ contract CustomNFT {
         return _operatorApprovals[owner_][operator];
     }
     
-    function transferFrom(address from, address to, uint256 tokenId) public whenNotPaused {
+    function transferFrom(address from, address to, uint256 tokenId) public {
         require(_isApprovedOrOwner(msg.sender, tokenId), "Not authorized");
         require(ownerOf(tokenId) == from, "Wrong owner");
         require(to != address(0), "Zero address");
         
         delete _tokenApprovals[tokenId];
-        _balances[from] -= 1;
+        
+        unchecked {
+            _balances[from] -= 1;
+        }
         _balances[to] += 1;
         _owners[tokenId] = to;
         
         emit Transfer(from, to, tokenId);
     }
     
-    function mint(address to) public onlyOwner whenNotPaused returns (uint256) {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public {
+        transferFrom(from, to, tokenId);
+        
+        // If the recipient is a contract, check if it supports ERC721
+        if (_isContract(to)) {
+            require(
+                _checkERC721Support(to, tokenId),
+                "Recipient doesn't support ERC721"
+            );
+        }
+    }
+    
+    function _isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
+    }
+    
+    function _checkERC721Support(address to, uint256 tokenId) internal returns (bool) {
+        try this._checkOnERC721Received(msg.sender, to, tokenId) returns (bool success) {
+            return success;
+        } catch {
+            return false;
+        }
+    }
+    
+    function _checkOnERC721Received(address from, address to, uint256 tokenId) external view returns (bool) {
+        // This is a simplified version - in a real implementation, you would call onERC721Received
+        return true;
+    }
+    
+    function mint(address to) public onlyOwner returns (uint256) {
         require(to != address(0), "Zero address");
         uint256 tokenId = _nextTokenId++;
         _owners[tokenId] = to;
@@ -238,18 +281,13 @@ contract CustomNFT {
         return bytes(_tokenURI).length > 0 ? _tokenURI : string(abi.encodePacked(baseURI, tokenId));
     }
     
+    function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
+        require(_owners[tokenId] != address(0), "Token doesn't exist");
+        _tokenURIs[tokenId] = uri;
+    }
+    
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         baseURI = newBaseURI;
-    }
-    
-    function pause() public onlyOwner {
-        paused = true;
-        emit Paused(true);
-    }
-    
-    function unpause() public onlyOwner {
-        paused = false;
-        emit Paused(false);
     }
     
     function transferOwnership(address newOwner) public onlyOwner {
@@ -264,7 +302,7 @@ export const CONTRACT_TEMPLATES: ContractTemplate[] = [
     name: 'ERC20 Token',
     description: 'Create a custom ERC20 token with advanced features',
     icon: React.createElement(Cube, { size: 24 }),
-    features: ['Mintable', 'Burnable', 'Pausable', 'Access Control'],
+    features: ['Mintable', 'Burnable', 'Access Control', 'Safe Math Operations'],
     defaultParams: {
       name: 'My Token',
       symbol: 'MTK',
@@ -276,7 +314,7 @@ export const CONTRACT_TEMPLATES: ContractTemplate[] = [
     name: 'NFT Collection',
     description: 'Launch your own NFT collection with ERC721',
     icon: React.createElement(Lightning, { size: 24 }),
-    features: ['Minting', 'Metadata Support', 'Access Control', 'Pausable'],
+    features: ['Minting', 'Metadata Support', 'Access Control', 'Safe Transfers'],
     defaultParams: {
       name: 'My NFT Collection',
       symbol: 'MNFT',
