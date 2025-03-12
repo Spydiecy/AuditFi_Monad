@@ -95,11 +95,11 @@ const SEVERITY_CONFIGS: Record<string, SeverityConfig> = {
     icon: <Warning className="text-yellow-500" size={20} weight="fill" />
   },
   low: { 
-    color: 'text-blue-500', 
+    color: 'text-primary-500', 
     label: 'Low Risk',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/20',
-    icon: <Warning className="text-blue-500" size={20} weight="bold" />
+    bgColor: 'bg-primary-500/10',
+    borderColor: 'border-primary-500/20',
+    icon: <Warning className="text-primary-500" size={20} weight="fill" />
   }
 };
 
@@ -343,10 +343,10 @@ export default function AuditPage() {
       <div className="max-w-6xl mx-auto px-4">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="inline-block mb-3 px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-            <span className="text-blue-400 text-sm font-semibold">AI Security Analysis</span>
+          <div className="inline-block mb-3 px-4 py-1 rounded-full bg-primary-500/10 border border-primary-500/20">
+            <span className="text-primary-400 text-sm font-semibold">AI Security Analysis</span>
           </div>
-          <h1 className="text-3xl font-mono font-bold text-blue-400 mb-4">Smart Contract Audit</h1>
+          <h1 className="text-3xl font-mono font-bold text-primary-400 mb-4">Smart Contract Audit</h1>
           <p className="text-gray-400">Get instant AI-powered security analysis for your smart contracts on Monad Network</p>
           <AnimatePresence>
             {error && (
@@ -367,7 +367,7 @@ export default function AuditPage() {
           {/* Code Input Panel */}
           <div className="h-[700px] flex flex-col">
             <div 
-              className="relative flex-1 bg-gray-900/50 rounded-lg border border-gray-800 hover:border-blue-500/30 transition-colors duration-300 shadow-lg"
+              className="relative flex-1 bg-gray-900/50 rounded-lg border border-gray-800 hover:border-primary-500/30 transition-colors duration-300 shadow-lg"
               style={{
                 '--mouse-x': `${mousePosition.x}px`,
                 '--mouse-y': `${mousePosition.y}px`
@@ -375,7 +375,7 @@ export default function AuditPage() {
             >
               <div className="absolute inset-0">
                 <div className="p-4 border-b border-gray-800 flex items-center gap-2">
-                  <FileCode className="text-blue-400" size={20} weight="duotone" />
+                  <FileCode className="text-primary-400" size={20} weight="duotone" />
                   <span className="font-mono">Solidity Code</span>
                 </div>
                 <div className="h-[calc(100%-60px)] custom-scrollbar">
@@ -399,11 +399,11 @@ export default function AuditPage() {
                     exit={{ opacity: 0 }}
                     className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center"
                   >
-                    <div className="bg-gray-900/80 p-6 rounded-lg border border-blue-500/30 shadow-lg">
-                      <Lock className="text-blue-400 mb-4 mx-auto" size={32} weight="bold" />
+                    <div className="bg-gray-900/80 p-6 rounded-lg border border-primary-500/30 shadow-lg">
+                      <Lock className="text-primary-400 mb-4 mx-auto" size={32} weight="bold" />
                       <div className="text-2xl font-mono mb-2 text-center">Cooldown</div>
                       <div className="flex items-center justify-center gap-2">
-                        <Timer className="text-blue-400" size={20} weight="fill" />
+                        <Timer className="text-primary-400" size={20} weight="fill" />
                         <span className="text-xl">{cooldown}s</span>
                       </div>
                     </div>
@@ -418,7 +418,7 @@ export default function AuditPage() {
               className={`mt-4 w-full py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
                 isAnalyzing || !code || cooldown > 0
                   ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                  : 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/20'
               }`}
             >
               {isAnalyzing ? (
@@ -439,7 +439,7 @@ export default function AuditPage() {
           <div className="h-[700px]">
             {result && showResult ? (
               <div 
-                className="h-full bg-gray-900/50 rounded-lg border border-gray-800 hover:border-blue-500/30 transition-colors duration-300 shadow-lg relative"
+                className="h-full bg-gray-900/50 rounded-lg border border-gray-800 hover:border-primary-500/30 transition-colors duration-300 shadow-lg relative"
                 style={{
                   '--mouse-x': `${mousePosition.x}px`,
                   '--mouse-y': `${mousePosition.y}px`
@@ -447,7 +447,7 @@ export default function AuditPage() {
               >
                 <div className="p-4 border-b border-gray-800 flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <Shield className="text-blue-400" size={20} weight="duotone" />
+                    <Shield className="text-primary-400" size={20} weight="duotone" />
                     <span className="font-mono">Analysis Results</span>
                   </div>
                   {txState.hash && currentChain && (
@@ -455,7 +455,7 @@ export default function AuditPage() {
                       href={`${CHAIN_CONFIG[currentChain].blockExplorerUrls[0]}/tx/${txState.hash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 transition-colors duration-200"
+                      className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1 transition-colors duration-200"
                     >
                       View Transaction <ArrowSquareOut size={16} weight="bold" />
                     </a>
@@ -470,7 +470,7 @@ export default function AuditPage() {
                         <Star
                           key={i}
                           weight={i < result.stars ? "fill" : "regular"}
-                          className={i < result.stars ? "text-blue-400" : "text-gray-600"}
+                          className={i < result.stars ? "text-primary-400" : "text-gray-600"}
                           size={24}
                         />
                       ))}
@@ -480,7 +480,7 @@ export default function AuditPage() {
 
                   {/* Summary */}
                   <div className="mb-6">
-                    <h3 className="font-mono text-sm text-blue-400 mb-2">SUMMARY</h3>
+                    <h3 className="font-mono text-sm text-primary-400 mb-2">SUMMARY</h3>
                     <div className="bg-gray-800/50 px-4 py-3 rounded-lg border border-gray-700/70 text-white">
                       {result.summary}
                     </div>
@@ -488,7 +488,7 @@ export default function AuditPage() {
 
                   {/* Vulnerabilities */}
                   <div className="mb-6 space-y-4">
-                    <h3 className="font-mono text-sm text-blue-400 mb-2">VULNERABILITIES</h3>
+                    <h3 className="font-mono text-sm text-primary-400 mb-2">VULNERABILITIES</h3>
                     {Object.entries(result.vulnerabilities).map(([severity, issues]) => {
                       if (issues.length === 0) return null;
                       const config = SEVERITY_CONFIGS[severity];
@@ -512,12 +512,12 @@ export default function AuditPage() {
 
                   {/* Recommendations */}
                   <div className="mb-6">
-                    <h3 className="font-mono text-sm text-blue-400 mb-2">RECOMMENDATIONS</h3>
-                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4">
+                    <h3 className="font-mono text-sm text-primary-400 mb-2">RECOMMENDATIONS</h3>
+                    <div className="bg-primary-500/5 border border-primary-500/20 rounded-lg p-4">
                       <ul className="space-y-2">
                         {result.recommendations.map((rec, index) => (
                           <li key={index} className="flex items-start gap-2 text-sm">
-                            <CheckCircle className="text-blue-400 mt-1 flex-shrink-0" size={16} weight="fill" />
+                            <CheckCircle className="text-primary-400 mt-1 flex-shrink-0" size={16} weight="fill" />
                             <span className="text-gray-300">{rec}</span>
                           </li>
                         ))}
@@ -527,12 +527,12 @@ export default function AuditPage() {
 
                   {/* Gas Optimizations */}
                   <div className="mb-6">
-                    <h3 className="font-mono text-sm text-blue-400 mb-2">GAS OPTIMIZATIONS</h3>
-                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4">
+                    <h3 className="font-mono text-sm text-primary-400 mb-2">GAS OPTIMIZATIONS</h3>
+                    <div className="bg-primary-500/5 border border-primary-500/20 rounded-lg p-4">
                       <ul className="space-y-2">
                         {result.gasOptimizations.map((opt, index) => (
                           <li key={index} className="flex items-start gap-2 text-sm">
-                            <Cube className="text-blue-400 mt-1 flex-shrink-0" size={16} weight="fill" />
+                            <Cube className="text-primary-400 mt-1 flex-shrink-0" size={16} weight="fill" />
                             <span className="text-gray-300">{opt}</span>
                           </li>
                         ))}
@@ -544,14 +544,14 @@ export default function AuditPage() {
                 {/* Register Audit Button Overlay */}
                 {isReviewBlurred && (
                   <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm bg-black/30">
-                    <div className="bg-gray-900 p-8 rounded-xl border border-blue-500/30 shadow-xl text-center">
-                      <Shield className="text-blue-400 mb-6 mx-auto" size={48} weight="duotone" />
+                    <div className="bg-gray-900 p-8 rounded-xl border border-primary-500/30 shadow-xl text-center">
+                      <Shield className="text-primary-400 mb-6 mx-auto" size={48} weight="duotone" />
                       <h3 className="text-xl font-bold mb-3">Verify Contract Security</h3>
                       <p className="text-gray-400 mb-6 max-w-sm">Register this audit on the blockchain to verify its security status and view the full report</p>
                       <button
                         onClick={registerAuditOnChain}
                         disabled={txState.isProcessing}
-                        className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-all duration-200 flex items-center gap-3 mx-auto shadow-lg shadow-blue-500/20"
+                        className="px-8 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg transition-all duration-200 flex items-center gap-3 mx-auto shadow-lg shadow-primary-500/20"
                       >
                         {txState.isProcessing ? (
                           <>
@@ -568,7 +568,7 @@ export default function AuditPage() {
                       
                       {/* Network guidance */}
                       {currentChain && (
-                        <div className="mt-4 text-blue-400 text-sm flex items-center justify-center gap-2">
+                        <div className="mt-4 text-primary-400 text-sm flex items-center justify-center gap-2">
                           <img 
                             src={CHAIN_CONFIG[currentChain].iconPath}
                             alt={CHAIN_CONFIG[currentChain].chainName}
@@ -598,24 +598,24 @@ export default function AuditPage() {
               <div className="h-full bg-gray-900/50 rounded-lg border border-gray-800 flex items-center justify-center text-gray-400 p-8">
                 <div className="text-center">
                   <div className="relative w-20 h-20 mx-auto mb-6">
-                    <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-2xl"></div>
-                    <Shield size={80} className="text-blue-400 relative z-10" weight="duotone" />
+                    <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-2xl"></div>
+                    <Shield size={80} className="text-primary-400 relative z-10" weight="duotone" />
                   </div>
                   <h3 className="text-xl font-mono mb-4">Smart Contract Analyzer</h3>
                   <p className="text-gray-500 mb-6 max-w-md mx-auto">
                     Paste your Solidity code on the left panel and click 'Analyze Contract' to get a comprehensive security assessment
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20">
                       Vulnerability Detection
                     </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20">
                       Security Scoring
                     </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20">
                       Gas Optimization
                     </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20">
                       On-Chain Verification
                     </span>
                   </div>

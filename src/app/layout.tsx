@@ -139,13 +139,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className="bg-[#0A0B0D] text-white min-h-screen">
-        <nav className="fixed w-full z-50 border-b border-gray-800/60 bg-[#0A0B0D]/90 backdrop-blur-xl shadow-md shadow-blue-900/10">
+        <nav className="fixed w-full z-50 border-b border-gray-800/60 bg-[#0A0B0D]/90 backdrop-blur-xl shadow-md shadow-primary-900/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <Link href="/" className="flex items-center space-x-2 group">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[10px] group-hover:bg-blue-400/30 transition-all duration-300"></div>
+                  <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[10px] group-hover:bg-primary-400/30 transition-all duration-300"></div>
                   <Image 
                     src={Logo}
                     alt="AuditFi Logo"
@@ -154,7 +154,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     className="relative z-10 group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <span className="text-xl font-mono font-bold text-white group-hover:text-blue-400 transition-colors duration-200">
+                <span className="text-xl font-mono font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
                   AuditFi
                 </span>
               </Link>
@@ -179,13 +179,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
                           isNetworkSwitching 
                             ? 'bg-gray-700 cursor-not-allowed' 
-                            : 'bg-gray-800/50 border border-gray-700/50 hover:border-blue-500/50 hover:bg-gray-800/70'
+                            : 'bg-gray-800/50 border border-gray-700/50 hover:border-primary-500/50 hover:bg-gray-800/70'
                         } transition-all duration-200`}
                         disabled={isNetworkSwitching}
                       >
                         {CHAIN_CONFIG[currentChain] && (
                           <div className="relative">
-                            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[5px]"></div>
+                            <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[5px]"></div>
                             <Image 
                               src={CHAIN_CONFIG[currentChain].iconPath}
                               alt={CHAIN_CONFIG[currentChain].chainName}
@@ -199,9 +199,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
                           {isNetworkSwitching ? 'Switching...' : (CHAIN_CONFIG[currentChain]?.chainName || 'Select Network')}
                         </span>
                         {isChainMenuOpen ? (
-                          <CaretUp className="w-4 h-4 text-blue-400" />
+                          <CaretUp className="w-4 h-4 text-primary-400" />
                         ) : (
-                          <CaretDown className="w-4 h-4 text-blue-400" />
+                          <CaretDown className="w-4 h-4 text-primary-400" />
                         )}
                       </button>
 
@@ -211,7 +211,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-48 rounded-lg bg-gray-800/90 backdrop-blur-lg border border-gray-700/70 shadow-lg shadow-blue-900/20 py-1 overflow-hidden"
+                          className="absolute right-0 mt-2 w-48 rounded-lg bg-gray-800/90 backdrop-blur-lg border border-gray-700/70 shadow-lg shadow-primary-900/20 py-1 overflow-hidden"
                         >
                           {Object.entries(CHAIN_CONFIG).map(([key, chain]) => (
                             <button
@@ -219,7 +219,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                               onClick={() => handleChainSwitch(key as ChainKey)}
                               className={`flex items-center space-x-2 w-full px-4 py-2 text-sm ${
                                 currentChain === key 
-                                  ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' 
+                                  ? 'bg-primary-500/10 text-primary-400 border-l-2 border-primary-500' 
                                   : 'text-gray-300 hover:bg-gray-700/70 hover:text-white'
                               } transition-all duration-200`}
                               disabled={isNetworkSwitching}
@@ -241,17 +241,17 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     {/* Connected Wallet Display */}
                     <button
                       onClick={handleDisconnect}
-                      className="ml-4 flex items-center space-x-2 px-4 py-2 bg-gray-800/70 hover:bg-gray-800 border border-gray-700/50 hover:border-blue-500/50 text-white rounded-lg transition-all duration-200 group"
+                      className="ml-4 flex items-center space-x-2 px-4 py-2 bg-gray-800/70 hover:bg-gray-800 border border-gray-700/50 hover:border-primary-500/50 text-white rounded-lg transition-all duration-200 group"
                     >
-                      <span className="text-sm font-medium group-hover:text-blue-400 transition-colors">{formatAddress(address)}</span>
-                      <SignOut className="w-4 h-4 text-blue-400" weight="bold" />
+                      <span className="text-sm font-medium group-hover:text-primary-400 transition-colors">{formatAddress(address)}</span>
+                      <SignOut className="w-4 h-4 text-primary-400" weight="bold" />
                     </button>
                   </>
                 ) : (
                   // Wallet Connect Button (when not connected)
                   <button
                     onClick={handleConnect}
-                    className="ml-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-all duration-200 shadow-md shadow-blue-500/20 flex items-center gap-2"
+                    className="ml-4 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg transition-all duration-200 shadow-md shadow-primary-500/20 flex items-center gap-2"
                   >
                     <Lightning weight="fill" className="w-4 h-4" />
                     Connect Wallet
@@ -265,9 +265,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 className="md:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 transition-colors duration-200"
               >
                 {isOpen ? (
-                  <X weight="bold" className="w-5 h-5 text-blue-400" />
+                  <X weight="bold" className="w-5 h-5 text-primary-400" />
                 ) : (
-                  <List weight="bold" className="w-5 h-5 text-blue-400" />
+                  <List weight="bold" className="w-5 h-5 text-primary-400" />
                 )}
               </button>
             </div>
@@ -301,7 +301,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                           onClick={() => handleChainSwitch(key as ChainKey)}
                           className={`flex items-center space-x-2 w-full px-3 py-2 rounded-lg ${
                             currentChain === key 
-                              ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' 
+                              ? 'bg-primary-500/10 text-primary-400 border-l-2 border-primary-500' 
                               : 'text-gray-300 hover:bg-gray-800/80 hover:text-white'
                           } transition-all duration-200`}
                           disabled={isNetworkSwitching}
@@ -327,15 +327,15 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   {address ? (
                     <button
                       onClick={handleDisconnect}
-                      className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gray-800/80 border border-gray-700 text-white rounded-lg hover:bg-gray-800 hover:border-blue-500/50 transition-all duration-200"
+                      className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gray-800/80 border border-gray-700 text-white rounded-lg hover:bg-gray-800 hover:border-primary-500/50 transition-all duration-200"
                     >
                       <span className="font-medium">{formatAddress(address)}</span>
-                      <SignOut className="w-4 h-4 text-blue-400" weight="bold" />
+                      <SignOut className="w-4 h-4 text-primary-400" weight="bold" />
                     </button>
                   ) : (
                     <button
                       onClick={handleConnect}
-                      className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2"
+                      className="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-primary-700/20 flex items-center justify-center gap-2"
                     >
                       <Lightning weight="fill" className="w-5 h-5" />
                       Connect Wallet
@@ -367,7 +367,7 @@ function NavLink({ href, children }: NavLinkProps) {
       className="group px-3 py-2 relative text-gray-300 hover:text-white transition-colors duration-200"
     >
       {children}
-      <span className="absolute inset-x-3 bottom-1 h-[2px] bg-blue-500 transform scale-x-0 origin-left transition-transform group-hover:scale-x-100 duration-300"></span>
+      <span className="absolute inset-x-3 bottom-1 h-[2px] bg-primary-500 transform scale-x-0 origin-left transition-transform group-hover:scale-x-100 duration-300"></span>
     </Link>
   );
 }
@@ -376,7 +376,7 @@ function MobileNavLink({ href, children }: NavLinkProps) {
   return (
     <Link 
       href={href}
-      className="block px-3 py-2.5 text-gray-300 hover:text-white hover:bg-blue-500/10 rounded-lg transition-colors duration-200 border-l-2 border-transparent hover:border-blue-500"
+      className="block px-3 py-2.5 text-gray-300 hover:text-white hover:bg-primary-500/10 rounded-lg transition-colors duration-200 border-l-2 border-transparent hover:border-primary-500"
     >
       {children}
     </Link>

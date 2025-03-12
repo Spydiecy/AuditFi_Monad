@@ -53,7 +53,7 @@
   inset: 0;
   background: radial-gradient(
     800px circle at var(--mouse-x, 0) var(--mouse-y, 0),
-    rgba(59, 130, 246, 0.15),
+    rgba(138, 112, 214, 0.15),
     transparent 40%
   );
   opacity: 0;
@@ -69,7 +69,7 @@
 /* Scrollbar Styling */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(59, 130, 246, 0.3) rgba(17, 17, 17, 0.3);
+  scrollbar-color: rgba(138, 112, 214, 0.3) rgba(17, 17, 17, 0.3);
 }
 
 ::-webkit-scrollbar {
@@ -83,19 +83,19 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(138, 112, 214, 0.3);
   border-radius: 3px;
   transition: background-color 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(138, 112, 214, 0.5);
 }
 
 /* Custom Scrolling Areas */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+  scrollbar-color: rgba(138, 112, 214, 0.3) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -107,12 +107,12 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(138, 112, 214, 0.3);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(138, 112, 214, 0.5);
 }
 
 /* Animations */
@@ -131,13 +131,13 @@
   animation: gradient 8s linear infinite;
 }
 
-/* Electric Blue Glow Effects */
+/* Electric Purple Glow Effects */
 .blue-glow {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(138, 112, 214, 0.5);
 }
 
 .blue-glow-text {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+  text-shadow: 0 0 10px rgba(138, 112, 214, 0.7);
 }
 
 /* Code Editor Styling */
@@ -150,13 +150,13 @@
   @apply bg-primary-500/20;
 }
 
-/* Blue Accents */
+/* Purple Accents */
 .blue-gradient-bg {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
+  background: linear-gradient(135deg, #453499 0%, #8A70D6 50%, #A78FF7 100%);
 }
 
 .blue-gradient-border {
-  border-image: linear-gradient(to right, #3B82F6, #06B6D4) 1;
+  border-image: linear-gradient(to right, #8A70D6, #06B6D4) 1;
 }
 
 /* Underline animation for navbar links */
@@ -171,7 +171,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, #3B82F6, #60A5FA);
+  background: linear-gradient(90deg, #8A70D6, #A78FF7);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.3s ease-in-out;
@@ -185,7 +185,7 @@
 /* Glowing effect for active links */
 .nav-active {
   position: relative;
-  color: #3B82F6;
+  color: #8A70D6;
 }
 
 .nav-active::before {
@@ -195,8 +195,8 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, #3B82F6, #60A5FA);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(90deg, #8A70D6, #A78FF7);
+  box-shadow: 0 0 8px rgba(138, 112, 214, 0.6);
 }
 
 /* Mobile nav transition effects */
@@ -256,7 +256,7 @@
 }
 
 .blue-glow-hover:hover {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(138, 112, 214, 0.5);
 }
 
 /* Gradient border animation */
@@ -273,7 +273,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #3B82F6, #06B6D4, #3B82F6);
+  background: linear-gradient(45deg, #8A70D6, #06B6D4, #8A70D6);
   background-size: 400% 400%;
   z-index: -1;
   border-radius: 0.6rem;

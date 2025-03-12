@@ -10,17 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#3B82F6', // Blue-500
-          50: '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#60A5FA',
-          500: '#3B82F6',
-          600: '#2563EB',
-          700: '#1D4ED8',
-          800: '#1E40AF',
-          900: '#1E3A8A',
+          DEFAULT: '#8A70D6', // Purple from logo
+          50: '#F5F2FF',
+          100: '#E9E4FD',
+          200: '#D3C9FB',
+          300: '#BDAEF9',
+          400: '#A78FF7',
+          500: '#8A70D6', // Main purple
+          600: '#7057C2',
+          700: '#5A45AD',
+          800: '#453499',
+          900: '#312485',
         },
         // Secondary cyan colors for accents
         secondary: {
