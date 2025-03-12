@@ -44,30 +44,18 @@ declare global {
 }
 
 export const CHAIN_CONFIG: Record<string, ChainConfig> = {
-  electroneumMainnet: {
-    chainId: '0xCB2E', // 52014 in hex
-    chainName: 'Electroneum Mainnet',
+  monadTestnet: {
+    chainId: '0x279F', // 10143 in hex
+    chainName: 'Monad Testnet',
     nativeCurrency: {
-      name: 'Electroneum',
-      symbol: 'ETN',
+      name: 'Monad',
+      symbol: 'MON',
       decimals: 18
     },
-    rpcUrls: ['https://rpc.ankr.com/electroneum'],
-    blockExplorerUrls: ['https://blockexplorer.electroneum.com'],
-    iconPath: '/chains/electroneum.png'
+    rpcUrls: ['https://testnet-rpc.monad.xyz'],
+    blockExplorerUrls: ['https://monad-testnet.socialscan.io'],
+    iconPath: '/chains/monad.png'
   },
-  electroneumTestnet: {
-    chainId: '0x4F5E0C', // 5201420 in hex
-    chainName: 'Electroneum Testnet',
-    nativeCurrency: {
-      name: 'Electroneum',
-      symbol: 'ETN',
-      decimals: 18
-    },
-    rpcUrls: ['https://rpc.ankr.com/electroneum_testnet'],
-    blockExplorerUrls: ['https://blockexplorer.thesecurityteam.rocks'],
-    iconPath: '/chains/electroneum.png'
-  }
 } as const;
 
 export type ChainKey = keyof typeof CHAIN_CONFIG;

@@ -1,7 +1,6 @@
 // constants/contracts.ts
 export const CONTRACT_ADDRESSES = {
-  electroneumMainnet: '0xCa36dD890F987EDcE1D6D7C74Fb9df627c216BF6',
-  electroneumTestnet: '0x5bA4CB3929C75DF47B8b5E6ca6c7414a5E1a3DB0',
+  monadTestnet: '0xCa36dD890F987EDcE1D6D7C74Fb9df627c216BF6',
   } as const;
 
   export const AUDIT_REGISTRY_ABI = [
