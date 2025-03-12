@@ -2,7 +2,7 @@
 
 **Next-generation smart contract security powered by Mistral AI, delivering instant, on-chain audit reports for Monad Testnet.**
 
-![AuditFi Dashboard](https://github.com/user-attachments/assets/f35a7bc8-3a5a-43a3-a931-1cae9facf9bf)
+![image](https://github.com/user-attachments/assets/d8700be0-fa2e-4001-bb43-f58f381d1e77)
 
 ## 🌟 Features
 
@@ -16,7 +16,7 @@
   - Specialized gas optimization for Monad environment
   - Instant verification on Monad Testnet Explorer
   
-  ![Monad Testnet Support](https://github.com/user-attachments/assets/e14ab2ae-90b1-43aa-ab08-c931eb42045d)
+  ![image](https://github.com/user-attachments/assets/139dacac-ac70-4307-aa1a-63489c578bb3)
 
 - **Self-Contained Smart Contract Templates**
   - Dependency-free ERC20 implementation
@@ -24,7 +24,7 @@
   - AI-assisted contract generation with custom specifications
   - Robust security features built into every template
   - Monad Testnet gas optimizations
-  - ![Screenshot 2025-03-06 202229](https://github.com/user-attachments/assets/9208b0bb-8b01-46ce-9227-6042d38ddde6)
+  - ![image](https://github.com/user-attachments/assets/40d44ec8-6fc9-45ae-b397-a8da6778187e)
 
 - **Secure Contract Building**
   - Zero-dependency contract architecture
@@ -38,8 +38,8 @@
   - Immutable audit history for complete traceability
   - Direct explorer integration for transparency
   - Verifiable security scores
-  - ![image](https://github.com/user-attachments/assets/a38973b8-3ff5-4f19-aa07-a03671303f3b)
-  - ![image](https://github.com/user-attachments/assets/0fa36ed0-8ee6-43ab-b8e6-28b4a9dfcfef)
+  - ![image](https://github.com/user-attachments/assets/7a746d19-14a4-4888-af1d-e2c41013e02d)
+  - ![image](https://github.com/user-attachments/assets/fe47e9f3-1127-4940-a3ca-a167576566c9)
 
 - **Interactive Development Experience**
   - Real-time code generation and validation
@@ -101,9 +101,9 @@ Visit [AuditFi](https://auditfi-monad.netlify.app/) to try it out on Monad Testn
   - Automatically generated smart contract documentation
   - AI-powered test case creation for multiple frameworks
 
-![image](https://github.com/user-attachments/assets/55b934a4-7fd5-42ff-ad19-a2430e508a90)
+![image](https://github.com/user-attachments/assets/bb402476-5dc5-4c25-baac-f0b8eb1bc377)
 
-![image](https://github.com/user-attachments/assets/252eecc8-9bec-4b20-95cc-4125ae6f41ae)
+![image](https://github.com/user-attachments/assets/b4455da8-4bcd-44b9-a92d-f05c0a46e009)
 
 ## 🔗 Network Support
 
@@ -115,12 +115,11 @@ Exclusively supporting Monad Testnet for:
 - Network-specific gas optimization
 - Monad-focused security patterns
 
-![image](https://github.com/user-attachments/assets/cb47e089-9035-483f-a6e8-ac3cdd125b24)
+![image](https://github.com/user-attachments/assets/54f7a70e-249b-4f01-991a-9e3e98fd376f)
 
 ## 📬 Contact & Support
 
 - Join the [Monad Discord](https://discord.gg/monad)
-- Follow AuditFi updates on [Twitter](https://x.com/AuditFi_ai)
 
 ## 📄 License
 
