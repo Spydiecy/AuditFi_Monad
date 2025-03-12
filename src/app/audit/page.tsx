@@ -142,9 +142,40 @@ export default function AuditPage() {
 
   // Validation functions
   const isSolidityCode = (code: string): boolean => {
-    const hasPragma = /pragma\s+solidity\s+[\^]?\d+\.\d+\.\d+/.test(code);
-    const hasContract = /contract\s+\w+/.test(code);
-    return hasPragma && hasContract;
+    // Check for pragma directive with more flexible pattern
+    const hasPragma = /pragma\s+solidity\s+[\^>=<]?[\d\.]+/.test(code);
+    
+    // Check for contract, interface, or library declarations
+    const hasContractLike = /(contract|interface|library)\s+\w+/.test(code);
+    
+    // For import statements and SPDX identifiers that might be in valid contracts
+    const hasImportOrSPDX = /(import\s+|\/\/\s*SPDX-License-Identifier)/.test(code);
+    
+    // Check for common Solidity functions and syntax
+    const hasSolidityFeatures = /(function|mapping|address|uint|int|bool|bytes|string|struct|enum)/.test(code);
+    
+    // If code has pragma and contract/interface/library, it's definitely Solidity
+    if (hasPragma && hasContractLike) {
+      return true;
+    }
+    
+    // If it has either pragma or contract-like declaration plus Solidity features, likely Solidity
+    if ((hasPragma || hasContractLike) && hasSolidityFeatures) {
+      return true;
+    }
+    
+    // If it has import/SPDX plus Solidity features, also likely Solidity
+    if (hasImportOrSPDX && hasSolidityFeatures) {
+      return true;
+    }
+    
+    // If it has multiple Solidity specific features, probably Solidity even without pragma/contract
+    const solidityKeywords = code.match(/(function|mapping|address|uint|int|bool|bytes|string|struct|enum)/g);
+    if (solidityKeywords && solidityKeywords.length >= 3) {
+      return true;
+    }
+    
+    return false;
   };
 
   // Detect current network

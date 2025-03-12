@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 
 // Define event types for better type safety
 type EthereumEvent = 
-  | { type: 'accountsChanged'; value: string[] }
+  | { type: 'accountsChanged'; value: string[] } 
   | { type: 'chainChanged'; value: string }
   | { type: 'connect'; value: { chainId: string } }
   | { type: 'disconnect'; value: { code: number; message: string } };
@@ -59,6 +59,7 @@ export const CHAIN_CONFIG: Record<string, ChainConfig> = {
 } as const;
 
 export type ChainKey = keyof typeof CHAIN_CONFIG;
+
 interface WalletConnection {
   provider: ethers.BrowserProvider;
   signer: ethers.JsonRpcSigner;
@@ -128,4 +129,18 @@ export const isSupportedNetwork = (chainId: string): boolean => {
   return Object.values(CHAIN_CONFIG).some(
     chain => chain.chainId.toLowerCase() === chainId.toLowerCase()
   );
+};
+
+// New functions to work with Privy
+export const getChainKeyFromChainId = (chainId: number): ChainKey | null => {
+  const chainEntry = Object.entries(CHAIN_CONFIG).find(
+    ([, config]) => parseInt(config.chainId, 16) === chainId
+  );
+  
+  return chainEntry ? chainEntry[0] as ChainKey : null;
+};
+
+export const getChainConfigFromChainId = (chainId: number): ChainConfig | null => {
+  const chainKey = getChainKeyFromChainId(chainId);
+  return chainKey ? CHAIN_CONFIG[chainKey] : null;
 };

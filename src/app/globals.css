@@ -132,11 +132,11 @@
 }
 
 /* Electric Purple Glow Effects */
-.blue-glow {
+.purple-glow {
   box-shadow: 0 0 15px rgba(138, 112, 214, 0.5);
 }
 
-.blue-glow-text {
+.purple-glow-text {
   text-shadow: 0 0 10px rgba(138, 112, 214, 0.7);
 }
 
@@ -151,11 +151,11 @@
 }
 
 /* Purple Accents */
-.blue-gradient-bg {
+.purple-gradient-bg {
   background: linear-gradient(135deg, #453499 0%, #8A70D6 50%, #A78FF7 100%);
 }
 
-.blue-gradient-border {
+.purple-gradient-border {
   border-image: linear-gradient(to right, #8A70D6, #06B6D4) 1;
 }
 
@@ -251,11 +251,11 @@
 }
 
 /* Glow effect for buttons and interactive elements */
-.blue-glow-hover {
+.purple-glow-hover {
   transition: all 0.3s ease;
 }
 
-.blue-glow-hover:hover {
+.purple-glow-hover:hover {
   box-shadow: 0 0 15px rgba(138, 112, 214, 0.5);
 }
 

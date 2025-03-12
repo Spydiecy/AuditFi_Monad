@@ -444,7 +444,7 @@ ${documentation.variables?.map(variable => `### ${variable.name}
       <style jsx>{`
         .custom-scrollbar {
           scrollbar-width: thin;
-          scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+          scrollbar-color: rgba(138, 112, 214, 0.3) transparent;
         }
         
         .custom-scrollbar::-webkit-scrollbar {
@@ -456,12 +456,12 @@ ${documentation.variables?.map(variable => `### ${variable.name}
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(59, 130, 246, 0.3);
+          background-color: rgba(138, 112, 214, 0.3);
           border-radius: 3px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(59, 130, 246, 0.5);
+          background-color: rgba(138, 112, 214, 0.5);
         }
       `}</style>
     </div>

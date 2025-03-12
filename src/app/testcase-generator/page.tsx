@@ -363,7 +363,7 @@ Return a structured list of testing steps without any extra text.`
           height: 100%;
           overflow-y: scroll;
           scrollbar-width: thin;
-          scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+          scrollbar-color: rgba(138, 112, 214, 0.3) transparent;
         }
 
         .code-input::-webkit-scrollbar {
@@ -375,12 +375,12 @@ Return a structured list of testing steps without any extra text.`
         }
 
         .code-input::-webkit-scrollbar-thumb {
-          background-color: rgba(59, 130, 246, 0.3);
+          background-color: rgba(138, 112, 214, 0.3);
           border-radius: 3px;
         }
 
         .code-input::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(59, 130, 246, 0.5);
+          background-color: rgba(138, 112, 214, 0.5);
         }
       `}</style>
     </div>
