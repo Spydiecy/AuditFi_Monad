@@ -66,50 +66,74 @@ export default function ReportsPage() {
             provider
           );
 
-          // First get total number of contracts
-          let totalContracts;
+          // Get total number of contracts first
           try {
-            totalContracts = await contract.getTotalContracts();
-            console.log(`Total contracts on ${chainKey}: ${totalContracts.toString()}`);
+            const totalContracts = await contract.getTotalContracts();
+            const totalContractsNum = Number(totalContracts);
+            console.log(`Total contracts on ${chainKey}: ${totalContractsNum}`);
             
-            if (totalContracts === BigInt(0)) {
+            if (totalContractsNum === 0) {
               console.log(`No contracts found on ${chainKey}`);
               continue;
             }
 
-            // Now fetch all audits with the total as limit
-            const result = await contract.getAllAudits(0, totalContracts);
-            
-            const {
-              contractHashes,
-              stars,
-              summaries,
-              auditors,
-              timestamps
-            } = result;
+            // Fetch all audits at once with proper error handling
+            try {
+              const result = await contract.getAllAudits(0, totalContractsNum);
+              
+              if (!result || !result.contractHashes) {
+                console.log(`No valid audit data returned from ${chainKey}`);
+                continue;
+              }
 
-            // Process all audits
-            for (let i = 0; i < contractHashes.length; i++) {
-              allAudits.push({
-                contractHash: contractHashes[i],
-                transactionHash: '', // Skip tx hash lookup for now
-                stars: Number(stars[i]),
-                summary: summaries[i],
-                auditor: auditors[i],
-                timestamp: Number(timestamps[i]),
-                chain: chainKey as ChainKey
-              });
+              const {
+                contractHashes,
+                stars,
+                summaries,
+                auditors,
+                timestamps
+              } = result;
+
+              // Ensure we have valid arrays before processing
+              if (!Array.isArray(contractHashes) || !Array.isArray(stars) || 
+                  !Array.isArray(summaries) || !Array.isArray(auditors) || 
+                  !Array.isArray(timestamps)) {
+                console.error(`Invalid data structure returned from ${chainKey}`);
+                continue;
+              }
+
+              // Process all audits with proper error handling
+              for (let i = 0; i < contractHashes.length; i++) {
+                try {
+                  allAudits.push({
+                    contractHash: contractHashes[i],
+                    transactionHash: '', // Skip tx hash lookup for now
+                    stars: Number(stars[i]),
+                    summary: summaries[i] || '',
+                    auditor: auditors[i],
+                    timestamp: Number(timestamps[i]),
+                    chain: chainKey as ChainKey
+                  });
+                } catch (parseError) {
+                  console.error(`Error parsing audit data at index ${i}:`, parseError);
+                  continue;
+                }
+              }
+
+              console.log(`Processed ${contractHashes.length} audits from ${chainKey}`);
+
+            } catch (fetchError) {
+              console.error(`Error fetching audits from ${chainKey}:`, fetchError);
+              continue;
             }
 
-            console.log(`Processed ${contractHashes.length} audits from ${chainKey}`);
-
           } catch (error) {
-            console.error(`Error getting data from ${chainKey}:`, error);
+            console.error(`Error getting total contracts from ${chainKey}:`, error);
             continue;
           }
 
         } catch (chainError) {
-          console.error(`Error processing chain ${chainKey}:`, chainError);
+          console.error(`Error setting up chain ${chainKey}:`, chainError);
           continue;
         }
       }

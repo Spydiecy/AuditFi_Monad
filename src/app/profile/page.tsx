@@ -13,9 +13,9 @@ import {
   Lightning
 } from 'phosphor-react';
 import Image from 'next/image';
-import { connectWallet } from '@/utils/web3';
 import { CHAIN_CONFIG } from '@/utils/web3';
 import { CONTRACT_ADDRESSES, AUDIT_REGISTRY_ABI } from '@/utils/contracts';
+import { useWallet } from '@/contexts/WalletConext';
 
 interface AuditStats {
   totalAudits: number;
@@ -33,7 +33,7 @@ interface UserAudit {
 }
 
 export default function ProfilePage() {
-  const [address, setAddress] = useState<string | null>(null);
+  const { walletAddress, walletConnected, connectWallet } = useWallet();
   const [stats, setStats] = useState<AuditStats>({
     totalAudits: 0,
     averageStars: 0,
@@ -42,19 +42,14 @@ export default function ProfilePage() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch user stats when wallet is connected
   useEffect(() => {
-    const initializeProfile = async () => {
-      try {
-        const { address: userAddress } = await connectWallet();
-        setAddress(userAddress);
-        await fetchUserStats(userAddress);
-      } catch (error) {
-        console.error('Failed to initialize profile:', error);
-      }
-    };
-
-    initializeProfile();
-  }, []);
+    if (walletConnected && walletAddress) {
+      fetchUserStats(walletAddress);
+    } else {
+      setIsLoading(false);
+    }
+  }, [walletConnected, walletAddress]);
 
   const fetchUserStats = async (userAddress: string) => {
     setIsLoading(true);
@@ -66,64 +61,118 @@ export default function ProfilePage() {
       for (const [chainKey, chainData] of Object.entries(CHAIN_CONFIG)) {
         try {
           console.log(`Fetching from ${chainKey}...`);
+          
+          // Create a provider for the current chain
           const provider = new ethers.JsonRpcProvider(chainData.rpcUrls[0]);
+          
+          // Get contract address for this chain
+          const contractAddress = CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES];
+          
+          // Skip if contract address is not defined for this chain
+          if (!contractAddress) {
+            console.log(`No contract address found for ${chainKey}`);
+            continue;
+          }
   
           const contract = new ethers.Contract(
-            CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES],
+            contractAddress,
             AUDIT_REGISTRY_ABI,
             provider
           );
   
           // Get total number of contracts first
-          let totalContracts;
           try {
-            totalContracts = await contract.getTotalContracts();
-            console.log(`Total contracts on ${chainKey}: ${totalContracts.toString()}`);
+            const totalContracts = await contract.getTotalContracts();
+            const totalContractsNum = Number(totalContracts);
+            console.log(`Total contracts on ${chainKey}: ${totalContractsNum}`);
             
-            if (totalContracts === BigInt(0)) {
+            if (totalContractsNum === 0) {
               console.log(`No contracts found on ${chainKey}`);
               continue;
             }
 
-            // Fetch all audits at once
-            const {
-              contractHashes,
-              stars,
-              summaries,
-              auditors,
-              timestamps
-            } = await contract.getAllAudits(0, totalContracts);
-
-            // Filter audits for the current user
-            for (let i = 0; i < contractHashes.length; i++) {
-              if (auditors[i].toLowerCase() === userAddress.toLowerCase()) {
-                allAudits.push({
-                  contractHash: contractHashes[i],
-                  stars: Number(stars[i]),
-                  summary: summaries[i],
-                  timestamp: Number(timestamps[i]),
-                  chain: chainKey as keyof typeof CHAIN_CONFIG
-                });
-
-                // Update chain counts and total stars
-                chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
-                totalStars += Number(stars[i]);
+            // Fetch all audits at once with proper error handling
+            try {
+              // If there are a lot of contracts, we might need to batch this
+              // For now, we'll limit to 100 contracts for safety
+              const batchSize = Math.min(totalContractsNum, 100);
+              
+              const result = await contract.getAllAudits(0, batchSize);
+              
+              if (!result || !result.contractHashes) {
+                console.log(`No valid audit data returned from ${chainKey}`);
+                continue;
               }
+
+              const {
+                contractHashes,
+                stars,
+                summaries,
+                auditors,
+                timestamps
+              } = result;
+
+              // Ensure we have valid arrays before processing
+              if (!Array.isArray(contractHashes) || !Array.isArray(stars) || 
+                  !Array.isArray(summaries) || !Array.isArray(auditors) || 
+                  !Array.isArray(timestamps)) {
+                console.error(`Invalid data structure returned from ${chainKey}`);
+                continue;
+              }
+
+              // Add debug logging
+              console.log(`Got ${contractHashes.length} audits from ${chainKey}`);
+              console.log(`User address: ${userAddress}`);
+              
+              // If there are audits, log the first one for debugging
+              if (contractHashes.length > 0) {
+                console.log(`Sample auditor address: ${auditors[0]}`);
+                console.log(`Address comparison: ${auditors[0].toLowerCase() === userAddress.toLowerCase()}`);
+              }
+
+              // Filter audits for the current user
+              let userAuditsCounter = 0;
+              for (let i = 0; i < contractHashes.length; i++) {
+                if (auditors[i] && auditors[i].toLowerCase() === userAddress.toLowerCase()) {
+                  userAuditsCounter++;
+                  try {
+                    allAudits.push({
+                      contractHash: contractHashes[i],
+                      stars: Number(stars[i]),
+                      summary: summaries[i] || '',
+                      timestamp: Number(timestamps[i]),
+                      chain: chainKey as keyof typeof CHAIN_CONFIG
+                    });
+
+                    // Update chain counts and total stars
+                    chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
+                    totalStars += Number(stars[i]);
+                  } catch (parseError) {
+                    console.error(`Error parsing audit data at index ${i}:`, parseError);
+                    continue;
+                  }
+                }
+              }
+
+              console.log(`Found ${userAuditsCounter} audits for user on ${chainKey}`);
+
+            } catch (fetchError) {
+              console.error(`Error fetching audits from ${chainKey}:`, fetchError);
+              continue;
             }
 
-            console.log(`Processed ${contractHashes.length} audits from ${chainKey}`);
-
           } catch (error) {
-            console.error(`Error getting data from ${chainKey}:`, error);
+            console.error(`Error getting total contracts from ${chainKey}:`, error);
             continue;
           }
         } catch (chainError) {
-          console.error(`Error fetching from ${chainKey}:`, chainError);
+          console.error(`Error setting up chain ${chainKey}:`, chainError);
           chainCounts[chainKey] = 0;
         }
       }
   
       const totalAudits = allAudits.length;
+      console.log(`Total audits found for user: ${totalAudits}`);
       
       setStats({
         totalAudits,
@@ -141,7 +190,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (!address) {
+  if (!walletConnected || !walletAddress) {
     return (
       <div className="min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
@@ -155,9 +204,7 @@ export default function ProfilePage() {
             <button
               onClick={async () => {
                 try {
-                  const { address } = await connectWallet();
-                  setAddress(address);
-                  await fetchUserStats(address);
+                  await connectWallet();
                 } catch (error) {
                   console.error('Failed to connect wallet:', error);
                 }
@@ -186,9 +233,9 @@ export default function ProfilePage() {
               <h1 className="text-3xl font-mono font-bold mb-2">Auditor Profile</h1>
               <div className="flex items-center space-x-2 text-gray-400 bg-gray-800/50 rounded-lg px-3 py-1.5 border border-gray-700/50 inline-flex">
                 <User size={16} className="text-primary-400" weight="bold" />
-                <span className="font-mono">{address}</span>
+                <span className="font-mono">{walletAddress}</span>
                 <a
-                  href={`https://monad-testnet.socialscan.io/address/${address}`}
+                  href={`https://monad-testnet.socialscan.io/address/${walletAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-400 hover:text-primary-300 transition-colors"
@@ -198,7 +245,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <button
-              onClick={() => fetchUserStats(address)}
+              onClick={() => fetchUserStats(walletAddress)}
               className="p-2 hover:bg-primary-500/10 rounded-lg transition-colors duration-200"
               title="Refresh Stats"
             >
@@ -252,34 +299,46 @@ export default function ProfilePage() {
                   <h2 className="text-xl font-mono">Chain Distribution</h2>
                 </div>
                 <div className="space-y-4">
-                  {Object.entries(stats.chainBreakdown).map(([chain, count]) => (
-                    <div key={chain} className="flex items-center space-x-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[2px]"></div>
-                        <Image
-                          src={CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].iconPath}
-                          alt={CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].chainName}
-                          width={24}
-                          height={24}
-                          className="rounded-full relative z-10"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-1">
-                          <span>{CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].chainName}</span>
-                          <span className="text-gray-400 px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-300 text-xs border border-primary-500/20">{count} audits</span>
-                        </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary-500"
-                            style={{
-                              width: `${(count / stats.totalAudits) * 100}%`
-                            }}
+                  {Object.entries(stats.chainBreakdown).length > 0 ? (
+                    Object.entries(stats.chainBreakdown).map(([chain, count]) => (
+                      <div key={chain} className="flex items-center space-x-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[2px]"></div>
+                          <Image
+                            src={CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].iconPath}
+                            alt={CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].chainName}
+                            width={24}
+                            height={24}
+                            className="rounded-full relative z-10"
                           />
                         </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <span>{CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG].chainName}</span>
+                            <span className="text-gray-400 px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-300 text-xs border border-primary-500/20">{count} audits</span>
+                          </div>
+                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary-500"
+                              style={{
+                                width: `${(count / (stats.totalAudits || 1)) * 100}%`
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 bg-gray-800/30 rounded-lg border border-gray-700/30">
+                      <div className="flex flex-col items-center">
+                        <Lightning size={32} className="text-primary-400/50 mb-4" weight="duotone" />
+                        <p className="text-gray-400 mb-2">No chain data available</p>
+                        <span className="text-xs px-3 py-1 rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20">
+                          Start auditing to see distribution
+                        </span>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -291,49 +350,49 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-mono">Recent Audits</h2>
               </div>
               <div className="space-y-4">
-                {stats.recentAudits.map((audit) => (
-                  <div
-                    key={`${audit.contractHash}-${audit.chain}`}
-                    className="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50 hover:border-primary-500/30 transition-colors duration-300"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="font-mono text-sm px-2 py-0.5 rounded bg-primary-500/10 text-primary-400 border border-primary-500/20">
-                        {audit.contractHash.slice(0, 8)}...{audit.contractHash.slice(-6)}
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            weight={i < audit.stars ? "fill" : "regular"}
-                            className={i < audit.stars ? "text-primary-400" : "text-gray-600"}
-                            size={16}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-300 mb-3">{audit.summary}</div>
-                    <div className="flex justify-between items-center text-sm">
-                      <div className="flex items-center space-x-2">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[1px]"></div>
-                          <Image
-                            src={CHAIN_CONFIG[audit.chain].iconPath}
-                            alt={CHAIN_CONFIG[audit.chain].chainName}
-                            width={16}
-                            height={16}
-                            className="rounded-full relative z-10"
-                          />
+                {stats.recentAudits.length > 0 ? (
+                  stats.recentAudits.map((audit) => (
+                    <div
+                      key={`${audit.contractHash}-${audit.chain}`}
+                      className="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50 hover:border-primary-500/30 transition-colors duration-300"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="font-mono text-sm px-2 py-0.5 rounded bg-primary-500/10 text-primary-400 border border-primary-500/20">
+                          {audit.contractHash.slice(0, 8)}...{audit.contractHash.slice(-6)}
                         </div>
-                        <span className="text-gray-400">{CHAIN_CONFIG[audit.chain].chainName}</span>
+                        <div className="flex items-center space-x-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              weight={i < audit.stars ? "fill" : "regular"}
+                              className={i < audit.stars ? "text-primary-400" : "text-gray-600"}
+                              size={16}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-900/80 text-gray-400 border border-gray-700/50">
-                        {new Date(audit.timestamp * 1000).toLocaleDateString()}
-                      </span>
+                      <div className="text-sm text-gray-300 mb-3">{audit.summary}</div>
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="flex items-center space-x-2">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-primary-500/20 rounded-full blur-[1px]"></div>
+                            <Image
+                              src={CHAIN_CONFIG[audit.chain].iconPath}
+                              alt={CHAIN_CONFIG[audit.chain].chainName}
+                              width={16}
+                              height={16}
+                              className="rounded-full relative z-10"
+                            />
+                          </div>
+                          <span className="text-gray-400">{CHAIN_CONFIG[audit.chain].chainName}</span>
+                        </div>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-900/80 text-gray-400 border border-gray-700/50">
+                          {new Date(audit.timestamp * 1000).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {stats.recentAudits.length === 0 && (
+                  ))
+                ) : (
                   <div className="text-center py-12 bg-gray-800/30 rounded-lg border border-gray-700/30">
                     <div className="flex flex-col items-center">
                       <ListChecks size={48} className="text-primary-400/50 mb-4" weight="duotone" />
