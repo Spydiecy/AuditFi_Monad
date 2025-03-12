@@ -37,11 +37,16 @@
     "@openzeppelin/contracts": "^5.1.0",
     "@privy-io/react-auth": "^2.6.2",
     "@types/aos": "^3.0.7",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/uuid": "^10.0.0",
     "aos": "^2.3.4",
     "ethers": "^6.13.4",
+    "jsonwebtoken": "^9.0.2",
     "phosphor-react": "^1.4.1",
+    "secretvaults": "^0.0.0-alpha.1",
     "solc": "^0.8.28",
     "use-sync-external-store": "^1.4.0",
+    "uuid": "^11.1.0",
     "zod": "^3.24.2"
   }
 }

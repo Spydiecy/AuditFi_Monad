@@ -33,7 +33,7 @@ const CHAIN_CONFIG = {
       symbol: 'MON',
       decimals: 18
     },
-    rpcUrls: ['https://monad-testnet.g.alchemy.com/v2/cPagatQQ9SL_dZvqKBJYoc_dG2cHbmcA','https://testnet-rpc.monad.xyz'],
+    rpcUrls: ['https://testnet-rpc.monad.xyz'],
     blockExplorerUrls: ['https://monad-testnet.socialscan.io'],
     iconPath: '/chains/monad.png'
   },
