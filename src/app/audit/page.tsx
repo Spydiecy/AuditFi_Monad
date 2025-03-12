@@ -187,15 +187,15 @@ export default function AuditPage() {
       const network = await provider.getNetwork();
       const chainId = '0x' + network.chainId.toString(16);
       
-      // Check if we're on Electroneum Network (either mainnet or testnet)
+      // Check if we're on Monad Network (either mainnet or testnet)
       const detectedChain = await detectCurrentNetwork();
       
       if (!detectedChain) {
-        throw new Error('Please switch to Electroneum Network (Mainnet or Testnet) to register audits');
+        throw new Error('Please switch to Monad Network (Testnet) to register audits');
       }
       
-      if (detectedChain !== 'electroneumMainnet' && detectedChain !== 'electroneumTestnet') {
-        throw new Error('Please switch to Electroneum Network (Mainnet or Testnet) to register audits');
+      if (detectedChain !== 'monadTestnet') {
+        throw new Error('Please switch to Monad Network (Testnet) to register audits');
       }
       
       // Get the proper contract address based on the current network
@@ -347,7 +347,7 @@ export default function AuditPage() {
             <span className="text-blue-400 text-sm font-semibold">AI Security Analysis</span>
           </div>
           <h1 className="text-3xl font-mono font-bold text-blue-400 mb-4">Smart Contract Audit</h1>
-          <p className="text-gray-400">Get instant AI-powered security analysis for your smart contracts on Electroneum Network</p>
+          <p className="text-gray-400">Get instant AI-powered security analysis for your smart contracts on Monad Network</p>
           <AnimatePresence>
             {error && (
               <motion.div
@@ -580,7 +580,7 @@ export default function AuditPage() {
                       
                       {!currentChain && (
                         <div className="mt-4 text-yellow-400 text-sm">
-                          Please connect to Electroneum Network (Mainnet or Testnet)
+                          Please connect to Monad Network (Testnet)
                         </div>
                       )}
                     </div>
