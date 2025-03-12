@@ -74,43 +74,48 @@ export default function ProfilePage() {
             provider
           );
   
-          // Get all audits in batches
-          const BATCH_SIZE = 50;
-          const totalContracts = await contract.getTotalContracts();
-          let processed = 0;
-  
-          while (processed < totalContracts) {
-            try {
-              const {
-                contractHashes,
-                stars,
-                summaries,
-                auditors,
-                timestamps
-              } = await contract.getAllAudits(processed, BATCH_SIZE);
-  
-              // Filter audits for the current user
-              for (let i = 0; i < contractHashes.length; i++) {
-                if (auditors[i].toLowerCase() === userAddress.toLowerCase()) {
-                  allAudits.push({
-                    contractHash: contractHashes[i],
-                    stars: Number(stars[i]),
-                    summary: summaries[i],
-                    timestamp: Number(timestamps[i]),
-                    chain: chainKey as keyof typeof CHAIN_CONFIG
-                  });
-  
-                  // Update chain counts and total stars
-                  chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
-                  totalStars += Number(stars[i]);
-                }
-              }
-  
-              processed += contractHashes.length;
-            } catch (batchError) {
-              console.error(`Error fetching batch at ${processed} from ${chainKey}:`, batchError);
-              break;
+          // Get total number of contracts first
+          let totalContracts;
+          try {
+            totalContracts = await contract.getTotalContracts();
+            console.log(`Total contracts on ${chainKey}: ${totalContracts.toString()}`);
+            
+            if (totalContracts === BigInt(0)) {
+              console.log(`No contracts found on ${chainKey}`);
+              continue;
             }
+
+            // Fetch all audits at once
+            const {
+              contractHashes,
+              stars,
+              summaries,
+              auditors,
+              timestamps
+            } = await contract.getAllAudits(0, totalContracts);
+
+            // Filter audits for the current user
+            for (let i = 0; i < contractHashes.length; i++) {
+              if (auditors[i].toLowerCase() === userAddress.toLowerCase()) {
+                allAudits.push({
+                  contractHash: contractHashes[i],
+                  stars: Number(stars[i]),
+                  summary: summaries[i],
+                  timestamp: Number(timestamps[i]),
+                  chain: chainKey as keyof typeof CHAIN_CONFIG
+                });
+
+                // Update chain counts and total stars
+                chainCounts[chainKey] = (chainCounts[chainKey] || 0) + 1;
+                totalStars += Number(stars[i]);
+              }
+            }
+
+            console.log(`Processed ${contractHashes.length} audits from ${chainKey}`);
+
+          } catch (error) {
+            console.error(`Error getting data from ${chainKey}:`, error);
+            continue;
           }
         } catch (chainError) {
           console.error(`Error fetching from ${chainKey}:`, chainError);

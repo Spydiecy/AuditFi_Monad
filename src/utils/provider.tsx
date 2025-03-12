@@ -28,7 +28,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId="cm85jeuxx00dk12ymg389oe08"
       config={{
-        loginMethods: ['email', 'wallet'],
+        loginMethods: ['email', 'wallet', 'google', 'apple'],
         appearance: {
           theme: 'dark',
           accentColor: '#FF10F0',
